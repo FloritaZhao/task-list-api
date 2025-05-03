@@ -8,6 +8,9 @@ class Task(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=False)
     completed_at = db.Column(db.DateTime, nullable=True)
+    goal_id = db.Column(db.Integer, db.ForeignKey('goals.id'), nullable=True)
+    goal = db.relationship('Goal', back_populates='tasks')
+
 
     def to_dict(self):
         return {

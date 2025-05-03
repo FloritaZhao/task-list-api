@@ -34,7 +34,7 @@ def mark_complete(task_id):
         db.session.commit()
     
     slack_token = os.environ.get("SLACK_TOKEN")
-    channel = os.environ.get("SLACK_CHANNEL", "task-notifications")
+    channel = os.environ.get("SLACK_CHANNEL", "#hello-from-api")
     text = f"Flora just completed the task *{task.title}*"
     
     response = requests.post(
@@ -55,7 +55,20 @@ def mark_incomplete(task_id):
     if task is None:
         return jsonify({"error": f"Task {task_id} not found"}), 404
 
-    # 只要把 completed_at 设为 None 就是“未完成”
     task.completed_at = None
     db.session.commit()
     return "", 204
+
+@tasks_bp.route("", methods=["POST"])
+def create_task():
+    request_body = request.get_json()
+    new_task = Task(
+        title=request_body["title"],
+        description=request_body.get("description")
+    )
+    db.session.add(new_task)
+    db.session.commit()
+
+    return jsonify({
+        "task": new_task.to_dict()
+    }), 201
