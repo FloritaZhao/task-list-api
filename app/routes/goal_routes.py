@@ -8,7 +8,7 @@ goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 def get_goal_or_404(goal_id):
     goal = Goal.query.get(goal_id)
     if goal is None:
-        return {"message": f"Goal {goal_id} not found"}, 404
+        return {"message": f"goal {goal_id} not found"}, 404
     return goal
 
 @goals_bp.post("")

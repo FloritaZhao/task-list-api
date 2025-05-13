@@ -22,6 +22,33 @@ def get_tasks():
     tasks_response = [ task.to_dict() for task in tasks ]
     return tasks_response
 
+@tasks_bp.get("/<int:task_id>")
+def get_task(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return jsonify({"error": f"Task {task_id} not found"}), 404
+    
+    return jsonify({
+        "task": task.to_dict()
+    }), 200
+
+
+@tasks_bp.post("")
+def create_task():
+    request_body = request.get_json()
+    try:
+        new_task = Task.from_dict(request_body)
+    except ValueError:
+        return jsonify({"details": "Invalid data"}), 400
+
+    db.session.add(new_task)
+    db.session.commit()
+
+    return jsonify({
+        "task": new_task.to_dict()
+    }), 201
+
+
 
 @tasks_bp.patch("/<int:task_id>/mark_complete")
 def mark_complete(task_id):
@@ -59,16 +86,27 @@ def mark_incomplete(task_id):
     db.session.commit()
     return "", 204
 
-@tasks_bp.route("", methods=["POST"])
-def create_task():
-    request_body = request.get_json()
-    new_task = Task(
-        title=request_body["title"],
-        description=request_body.get("description")
-    )
-    db.session.add(new_task)
-    db.session.commit()
 
-    return jsonify({
-        "task": new_task.to_dict()
-    }), 201
+@tasks_bp.put("/<int:task_id>")
+def update_task(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return jsonify({"error": f"Task {task_id} not found"}), 404
+
+    request_body = request.get_json()
+    task.title = request_body["title"]
+    task.description = request_body["description"]
+
+    db.session.commit()
+    return "", 204
+
+
+@tasks_bp.delete("/<int:task_id>")
+def delete_task(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return jsonify({"error": f"Task {task_id} not found"}), 404
+
+    db.session.delete(task)
+    db.session.commit()
+    return "", 204
