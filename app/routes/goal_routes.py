@@ -2,112 +2,76 @@ from flask import Blueprint, request, jsonify, make_response
 from app.models.goal import Goal
 from app.models.task import Task
 from app import db
+from app.routes.utils import validate_model, create_model, get_models_with_filters
 
-goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-def get_goal_or_404(goal_id):
-    goal = Goal.query.get(goal_id)
-    if goal is None:
-        return {"message": f"goal {goal_id} not found"}, 404
-    return goal
+bp = Blueprint("goals_bp", __name__, url_prefix="/goals")
 
-@goals_bp.post("")
+
+@bp.post("")
 def create_goal():
-    try:
-        goal = Goal.from_dict(request.get_json())
-    except ValueError:
-        return {"details": "Invalid data"}, 400
+    request_body = request.get_json()
+    return {"goal": create_model(Goal, request_body)}, 201
 
-    db.session.add(goal)
-    db.session.commit()
-    return jsonify({"goal": goal.to_dict()}), 201
 
-# 2) Read all Goals
-@goals_bp.get("")
-def read_goals():
-    goals = Goal.query.all()
-    return jsonify([ g.to_dict() for g in goals ]), 200
+@bp.get("")
+def read_all_goals():
+    return get_models_with_filters(Goal, request.args)
 
-# 3) Read one Goal
-@goals_bp.get("/<int:goal_id>")
+
+@bp.get("/<goal_id>")
 def read_one_goal(goal_id):
-    goal = get_goal_or_404(goal_id)
-    if isinstance(goal, tuple):
-        return goal
-    return jsonify({"goal": goal.to_dict()}), 200
+    goal = validate_model(Goal, goal_id)
+    return {"goal": goal.to_dict()}, 200
 
-# 4) Update Goal
-@goals_bp.put("/<int:goal_id>")
-def update_goal(goal_id):
-    goal = get_goal_or_404(goal_id)
-    if isinstance(goal, tuple):
-        return goal
 
-    data = request.get_json()
-    title = data.get("title")
-    if title is None:
-        return {"details": "Invalid data"}, 400
+@bp.put("/<goal_id>")
+def update_one_goal(goal_id):
+    goal = validate_model(Goal, goal_id)
 
-    goal.title = title
+    request_body = request.get_json()
+    goal.title = request_body["title"]
+
     db.session.commit()
     return "", 204
 
-# 5) Delete Goal
-@goals_bp.delete("/<int:goal_id>")
+
+@bp.delete("/<goal_id>")
 def delete_goal(goal_id):
-    goal = get_goal_or_404(goal_id)
-    if isinstance(goal, tuple):
-        return goal
+    goal = validate_model(Goal, goal_id)
 
     db.session.delete(goal)
     db.session.commit()
     return "", 204
 
 
-# POST /goals/<goal_id>/tasks：
-@goals_bp.post("/<int:goal_id>/tasks")
+@bp.post("/<goal_id>/tasks")
 def assign_tasks_to_goal(goal_id):
-    goal = get_goal_or_404(goal_id)
-    if isinstance(goal, tuple):
-        return goal
+    goal = validate_model(Goal, goal_id)
 
-    task_ids = request.get_json().get("task_ids")
-    if task_ids is None or not isinstance(task_ids, list):
-        return {"details": "Invalid data"}, 400
-    
-    tasks = []
-    for t_id in task_ids:
-        task = Task.query.get(t_id)
-        if task is None:
-            return {"message": f"Task {t_id} not found"}, 404
-        tasks.append(task)
+    request_data = request.get_json()
+    task_ids = request_data.get("task_ids")
 
-    for task in tasks:
-        task.goal = goal
+    for task_id in task_ids:
+        task = validate_model(Task, task_id)
+        task.goal_id = goal.id
 
     db.session.commit()
 
-    return jsonify({
+    return {
         "id": goal.id,
-        "task_ids": [ t.id for t in goal.tasks ]
-    }), 200
+        "task_ids": task_ids
+    }, 200
 
 
-# GET /goals/<goal_id>/tasks
-@goals_bp.get("/<int:goal_id>/tasks")
+
+@bp.get("/<goal_id>/tasks")
 def read_tasks_of_goal(goal_id):
-    goal = get_goal_or_404(goal_id)
-    if isinstance(goal, tuple):
-        return goal
-
-    tasks_list = []
-    for task in goal.tasks:
-        d = task.to_dict()
-        d["goal_id"] = goal.id
-        tasks_list.append(d)
-
-    return jsonify({
+    goal = validate_model(Goal, goal_id)
+    tasks = [task.to_dict() for task in goal.tasks]
+         
+    return {
         "id": goal.id,
         "title": goal.title,
-        "tasks": tasks_list
-    }), 200
+        "tasks": tasks
+    }, 200

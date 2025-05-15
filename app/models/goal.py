@@ -2,11 +2,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 from ..db import db
 
 class Goal(db.Model):
-    __tablename__ = 'goals'
-
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    title = db.Column(db.String(255), nullable=False)
-    tasks = db.relationship('Task', back_populates='goal', lazy=True)
+    title: Mapped[str] = mapped_column(nullable=False)
+    tasks: Mapped["Task"] = relationship(back_populates="goals")
 
 
     def to_dict(self):
