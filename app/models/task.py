@@ -6,7 +6,7 @@ from typing import Optional
 class Task(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    title: Mapped[str]
+    title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
     completed_at: Mapped[datetime] =mapped_column(nullable=True)
     
