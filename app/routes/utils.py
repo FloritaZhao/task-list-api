@@ -31,26 +31,25 @@ def create_model(cls, model_data):
     return new_model.to_dict()
 
 
-def get_models_with_filters(cls, filters=None):
+def get_models_with_filters_and_sort(cls, filters=None):
     query = db.select(cls)
 
     if filters:
         for attribute, value in filters.items():
+            if attribute == "sort":
+                continue
             if hasattr(cls, attribute):
                 query = query.where(getattr(cls, attribute).ilike(f"%{value}%"))
-
-    models = db.session.scalars(query.order_by(cls.id))
-    return [model.to_dict() for model in models]
-
-
-def get_models_with_sort(cls, sort=None):
-    query = db.select(cls)
+    
+    sort = filters.get("sort")
     if sort == "asc":
         query = query.order_by(cls.title.asc())
     elif sort == "desc":
         query = query.order_by(cls.title.desc())
     else:
         query = query.order_by(cls.id)
-    
-    models = db.session.scalars(query).all()
+
+
+    models = db.session.scalars(query.order_by(cls.id))
     return [model.to_dict() for model in models]
+

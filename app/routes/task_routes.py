@@ -4,14 +4,13 @@ from app import db
 from datetime import datetime, timezone
 import requests
 import os
-from app.routes.utils import validate_model, create_model, get_models_with_filters, get_models_with_sort
+from app.routes.utils import validate_model, create_model, get_models_with_filters_and_sort
 
 bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 
 @bp.get("")
 def get_all_tasks():
-    sort = request.args.get("sort")
-    return get_models_with_sort(Task, sort)
+    return get_models_with_filters_and_sort(Task, request.args)
 
 
 @bp.get("/<task_id>")
