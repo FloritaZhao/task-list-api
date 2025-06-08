@@ -4,7 +4,7 @@ from app import db
 from datetime import datetime, timezone
 import requests
 import os
-from app.routes.utils import validate_model, create_model, get_models_with_filters_and_sort
+from app.routes.utils import validate_model, create_model, get_models_with_filters_and_sort, delete_model
 
 bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 
@@ -45,7 +45,7 @@ def mark_complete(task_id):
     if not response.ok or response.json().get("ok") is not True:
         print("Slack notification failed:", response.text)
     
-    return "", 204
+    return jsonify(None), 204
 
 
 @bp.patch("/<task_id>/mark_incomplete")
@@ -54,7 +54,7 @@ def mark_incomplete(task_id):
 
     task.completed_at = None
     db.session.commit()
-    return "", 204
+    return jsonify(None), 204
 
 
 @bp.put("/<task_id>")
@@ -66,13 +66,10 @@ def update_task(task_id):
     task.description = request_body["description"]
 
     db.session.commit()
-    return "", 204
+    return jsonify(None), 204
 
 
 @bp.delete("/<int:task_id>")
 def delete_task(task_id):
     task = validate_model(Task, task_id)
-
-    db.session.delete(task)
-    db.session.commit()
-    return "", 204
+    return delete_model(Task, task_id)

@@ -1,5 +1,6 @@
-from flask import abort, make_response
+from flask import abort, make_response, jsonify
 from app import db
+
 
 
 def validate_model(cls, model_id):
@@ -18,6 +19,7 @@ def validate_model(cls, model_id):
 
     return model
 
+
 def create_model(cls, model_data):
     try:
         new_model = cls.from_dict(model_data)
@@ -29,6 +31,19 @@ def create_model(cls, model_data):
     db.session.commit()
 
     return new_model.to_dict()
+
+
+def delete_model(cls, model_data):
+    try:
+        new_model = cls.from_dict(model_data)
+    except (KeyError, ValueError) as e:
+        response = {"details": "Invalid data"}
+        abort(make_response(response, 400)) 
+
+    db.session.delete(new_model)
+    db.session.commit()
+
+    return jsonify({}), 204
 
 
 def get_models_with_filters_and_sort(cls, filters=None):
