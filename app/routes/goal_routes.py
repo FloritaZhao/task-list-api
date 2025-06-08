@@ -52,6 +52,9 @@ def assign_tasks_to_goal(goal_id):
     request_data = request.get_json()
     task_ids = request_data.get("task_ids")
 
+    for task in goal.tasks:
+        task.goal_id = None
+
     for task_id in task_ids:
         task = validate_model(Task, task_id)
         task.goal_id = goal.id
@@ -70,8 +73,4 @@ def read_tasks_of_goal(goal_id):
     goal = validate_model(Goal, goal_id)
     tasks = [task.to_dict() for task in goal.tasks]
          
-    return {
-        "id": goal.id,
-        "title": goal.title,
-        "tasks": tasks
-    }, 200
+    return jsonify(goal.to_dict(include_tasks=True)), 200
