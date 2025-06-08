@@ -8,9 +8,9 @@ class Task(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column()
-    completed_at: Mapped[datetime] =mapped_column(nullable=True)
+    completed_at: Mapped[Optional[datetime]] =mapped_column()
     
-    goal_id: Mapped[int] = mapped_column(db.ForeignKey("goal.id"), nullable=True)
+    goal_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey("goal.id"))
     goal: Mapped[Optional["Goal"]] = relationship(back_populates="tasks")
 
 
@@ -29,8 +29,6 @@ class Task(db.Model):
 
     @classmethod
     def from_dict(cls, data):
-        title = data.get("title")
-        description = data.get("description")
-        if title is None or description is None:
-            raise ValueError("Invalid data")
+        title = data["title"]
+        description = data["description"]
         return cls(title=title, description=description)
