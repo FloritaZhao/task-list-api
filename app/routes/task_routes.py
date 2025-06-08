@@ -30,9 +30,8 @@ def create_task():
 def mark_complete(task_id):
     task = validate_model(Task, task_id)
     
-    if task.completed_at is None:
-        task.completed_at = datetime.now(timezone.utc)
-        db.session.commit()
+    task.completed_at = datetime.now(timezone.utc)
+    db.session.commit()
     
     slack_token = os.environ.get("SLACK_TOKEN")
     channel = os.environ.get("SLACK_CHANNEL", "#test-slack-api")
