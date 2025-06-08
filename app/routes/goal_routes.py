@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, make_response
 from app.models.goal import Goal
 from app.models.task import Task
 from app import db
-from app.routes.utils import validate_model, create_model, get_models_with_filters
+from app.routes.utils import validate_model, create_model, get_models_with_filters_and_sort
 
 
 bp = Blueprint("goals_bp", __name__, url_prefix="/goals")
@@ -16,7 +16,7 @@ def create_goal():
 
 @bp.get("")
 def read_all_goals():
-    return get_models_with_filters(Goal, request.args)
+    return get_models_with_filters_and_sort(Goal, request.args)
 
 
 @bp.get("/<goal_id>")

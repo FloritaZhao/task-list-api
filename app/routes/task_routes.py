@@ -62,4 +62,4 @@ def update_task(task_id):
 @bp.delete("/<int:task_id>")
 def delete_task(task_id):
     task = validate_model(Task, task_id)
-    return delete_model(Task, task_id)
+    return delete_model(task)

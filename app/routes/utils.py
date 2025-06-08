@@ -33,14 +33,9 @@ def create_model(cls, model_data):
     return new_model.to_dict()
 
 
-def delete_model(cls, model_data):
-    try:
-        new_model = cls.from_dict(model_data)
-    except (KeyError, ValueError) as e:
-        response = {"details": "Invalid data"}
-        abort(make_response(response, 400)) 
-
-    db.session.delete(new_model)
+def delete_model(model_instance):
+    # print("🤖 DELETING:", model_instance, type(model_instance))
+    db.session.delete(model_instance)
     db.session.commit()
 
     return jsonify({}), 204
