@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, make_response
 from app.models.task import Task
+from app.slack import notify_task_complete
 from app import db
 from datetime import datetime, timezone
 import requests
@@ -32,18 +33,7 @@ def mark_complete(task_id):
     task.completed_at = datetime.now(timezone.utc)
     db.session.commit()
     
-    slack_token = os.environ.get("SLACK_TOKEN")
-    channel = os.environ.get("SLACK_CHANNEL", "#test-slack-api")
-    text = f"Flora just completed the task *{task.title}*"
-    
-    response = requests.post(
-        "https://slack.com/api/chat.postMessage",
-        headers={"Authorization": f"Bearer {slack_token}"},
-        json={"channel": channel, "text": text}
-    )
-
-    if not response.ok or response.json().get("ok") is not True:
-        print("Slack notification failed:", response.text)
+    notify_task_complete(task)
     
     return jsonify(None), 204
 
